@@ -33,6 +33,7 @@ import (
 	"github.com/ogi4i/mikrotik-exporter/collector/interface/wlan"
 	"github.com/ogi4i/mikrotik-exporter/collector/ip_pool"
 	"github.com/ogi4i/mikrotik-exporter/collector/ipsec"
+	"github.com/ogi4i/mikrotik-exporter/collector/kid_control"
 	"github.com/ogi4i/mikrotik-exporter/collector/netwatch"
 	"github.com/ogi4i/mikrotik-exporter/collector/ospf_neighbors"
 	"github.com/ogi4i/mikrotik-exporter/collector/poe"
@@ -301,6 +302,10 @@ func buildCollectors(features *config.Features) []collector.FeatureCollector {
 
 	if features.WireguardPeers {
 		collectors = append(collectors, wireguard_peers.NewCollector())
+	}
+
+	if features.KidControl {
+		collectors = append(collectors, kid_control.NewCollector())
 	}
 
 	return collectors

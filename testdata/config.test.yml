@@ -32,6 +32,7 @@ features:
   capsman: true
   wlan: true
   ipsec: true
+  kid_control: true
   ospf_neighbors: true
   lte: true
   netwatch: true

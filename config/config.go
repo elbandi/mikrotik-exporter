@@ -71,6 +71,8 @@ type (
 		BridgeHosts bool `yaml:"bridge_hosts,omitempty"`
 		// WireguardPeers - enables wireguard peers metrics collection
 		WireguardPeers bool `yaml:"wireguard_peers,omitempty"`
+		// KidControl - enables Kid Control metrics collection
+		KidControl bool `yaml:"kid_control,omitempty"`
 	}
 
 	// Device - represents a target device configuration
