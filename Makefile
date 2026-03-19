@@ -2,7 +2,7 @@ LOCAL_BIN:=$(CURDIR)/bin
 MINIMOCK_BIN:=$(LOCAL_BIN)/minimock
 MINIMOCK_TAG:=v3.3.6
 GOLANGCI_BIN:=$(LOCAL_BIN)/golangci-lint
-GOLANGCI_TAG:=v1.50.1
+GOLANGCI_TAG:=v1.64.8
 
 export CGO_ENABLED=0
 export GOSUMDB=sum.golang.org
