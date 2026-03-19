@@ -15,9 +15,11 @@ import (
 var (
 	labelNames         = []string{"name", "address"}
 	metricDescriptions = map[string]*prometheus.Desc{
-		"voltage":         metrics.BuildMetricDescription(prefix, "voltage", "input voltage to routeros board in volts", labelNames),
-		"temperature":     metrics.BuildMetricDescription(prefix, "board_temperature", "temperature of routeros board in degrees celsius", labelNames),
-		"cpu-temperature": metrics.BuildMetricDescription(prefix, "cpu_temperature", "cpu temperature in degrees celsius", labelNames),
+		"voltage":           metrics.BuildMetricDescription(prefix, "voltage", "input voltage to routeros board in volts", labelNames),
+		"current":           metrics.BuildMetricDescription(prefix, "current", "input current to routeros board in amper", labelNames),
+		"temperature":       metrics.BuildMetricDescription(prefix, "board_temperature", "temperature of routeros board in degrees celsius", labelNames),
+		"cpu-temperature":   metrics.BuildMetricDescription(prefix, "cpu_temperature", "cpu temperature in degrees celsius", labelNames),
+		"power-consumption": metrics.BuildMetricDescription(prefix, "power_consumption", "power consumption of routeros board in watts", labelNames),
 	}
 )
 
