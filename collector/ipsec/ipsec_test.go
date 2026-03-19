@@ -143,7 +143,7 @@ func Test_ipsecCollector_Collect(t *testing.T) {
 			},
 		},
 		{
-			name: "fetch error",
+			name: "tunnel fetch error",
 			setMocks: func() {
 				routerOSClientMock.RunMock.When([]string{
 					"/ip/ipsec/policy/print",
@@ -151,6 +151,27 @@ func Test_ipsecCollector_Collect(t *testing.T) {
 					"?dynamic=false",
 					"=.proplist=src-address,dst-address,ph2-state,invalid,active,comment",
 				}...).Then(nil, errors.New("some fetch error"))
+
+				routerOSClientMock.RunMock.When([]string{
+					"/ip/ipsec/active-peers/print",
+					"=.proplist=local-address,remote-address,state,side,uptime,rx-bytes,rx-packets,tx-bytes,tx-packets",
+				}...).Then(&routeros.Reply{
+					Re: []*proto.Sentence{},
+				}, nil)
+			},
+			errWant: "failed to fetch ipsec tunnels: some fetch error",
+		},
+		{
+			name: "peers fetch error",
+			setMocks: func() {
+				routerOSClientMock.RunMock.When([]string{
+					"/ip/ipsec/policy/print",
+					"?disabled=false",
+					"?dynamic=false",
+					"=.proplist=src-address,dst-address,ph2-state,invalid,active,comment",
+				}...).Then(&routeros.Reply{
+					Re: []*proto.Sentence{},
+				}, nil)
 
 				routerOSClientMock.RunMock.When([]string{
 					"/ip/ipsec/active-peers/print",
