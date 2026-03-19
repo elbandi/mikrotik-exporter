@@ -124,7 +124,7 @@ func (mmCollect *mFeatureCollectorMockCollect) Return(err error) *FeatureCollect
 	return mmCollect.mock
 }
 
-//Set uses given function f to mock the FeatureCollector.Collect method
+// Set uses given function f to mock the FeatureCollector.Collect method
 func (mmCollect *mFeatureCollectorMockCollect) Set(f func(ctx *context.Context) (err error)) *FeatureCollectorMock {
 	if mmCollect.defaultExpectation != nil {
 		mmCollect.mock.t.Fatalf("Default expectation is already set for the FeatureCollector.Collect method")
@@ -334,7 +334,7 @@ func (mmDescribe *mFeatureCollectorMockDescribe) Return() *FeatureCollectorMock 
 	return mmDescribe.mock
 }
 
-//Set uses given function f to mock the FeatureCollector.Describe method
+// Set uses given function f to mock the FeatureCollector.Describe method
 func (mmDescribe *mFeatureCollectorMockDescribe) Set(f func(ch chan<- *prometheus.Desc)) *FeatureCollectorMock {
 	if mmDescribe.defaultExpectation != nil {
 		mmDescribe.mock.t.Fatalf("Default expectation is already set for the FeatureCollector.Describe method")
@@ -511,7 +511,7 @@ func (mmName *mFeatureCollectorMockName) Return(s1 string) *FeatureCollectorMock
 	return mmName.mock
 }
 
-//Set uses given function f to mock the FeatureCollector.Name method
+// Set uses given function f to mock the FeatureCollector.Name method
 func (mmName *mFeatureCollectorMockName) Set(f func() (s1 string)) *FeatureCollectorMock {
 	if mmName.defaultExpectation != nil {
 		mmName.mock.t.Fatalf("Default expectation is already set for the FeatureCollector.Name method")

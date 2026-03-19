@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"net"
 
-	"gopkg.in/routeros.v2"
+	"github.com/go-routeros/routeros/v3"
 
 	ros "github.com/ogi4i/mikrotik-exporter/routeros"
 )

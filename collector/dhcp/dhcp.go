@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-routeros/routeros/v3/proto"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/routeros.v2/proto"
 
 	"github.com/ogi4i/mikrotik-exporter/collector/context"
 	"github.com/ogi4i/mikrotik-exporter/metrics"

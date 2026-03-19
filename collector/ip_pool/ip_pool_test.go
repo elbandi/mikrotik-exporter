@@ -4,10 +4,10 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/go-routeros/routeros/v3"
+	"github.com/go-routeros/routeros/v3/proto"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/routeros.v2"
-	"gopkg.in/routeros.v2/proto"
 
 	"github.com/ogi4i/mikrotik-exporter/collector/context"
 	"github.com/ogi4i/mikrotik-exporter/metrics"

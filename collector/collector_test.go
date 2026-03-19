@@ -176,7 +176,7 @@ func Test_collector_Collect(t *testing.T) {
 					defer close(ch)
 					return ch
 				})
-				routerOSClientMock.CloseMock.Return()
+				routerOSClientMock.CloseMock.Return(nil)
 			},
 			want: []prometheus.Metric{
 				prometheus.MustNewConstMetric(
@@ -251,7 +251,7 @@ func Test_collector_Collect(t *testing.T) {
 					defer close(ch)
 					return ch
 				})
-				routerOSClientMock.CloseMock.Return()
+				routerOSClientMock.CloseMock.Return(nil)
 			},
 			want: []prometheus.Metric{
 				prometheus.MustNewConstMetric(
@@ -365,7 +365,7 @@ func Test_collector_Collect(t *testing.T) {
 					defer close(ch)
 					return ch
 				})
-				routerOSClientMock.CloseMock.Return()
+				routerOSClientMock.CloseMock.Return(nil)
 			},
 			want: []prometheus.Metric{
 				prometheus.MustNewConstMetric(
@@ -465,7 +465,7 @@ func Test_collector_Collect(t *testing.T) {
 					defer close(ch)
 					return ch
 				})
-				routerOSClientMock.CloseMock.Return()
+				routerOSClientMock.CloseMock.Return(nil)
 			},
 			want: []prometheus.Metric{
 				prometheus.MustNewConstMetric(

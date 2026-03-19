@@ -1,15 +1,17 @@
 module github.com/ogi4i/mikrotik-exporter
 
-go 1.19
+go 1.21
+
+toolchain go1.22.6
 
 require (
+	github.com/go-routeros/routeros/v3 v3.0.1
 	github.com/gojuno/minimock/v3 v3.0.10
 	github.com/miekg/dns v1.1.50
 	github.com/prometheus/client_golang v1.14.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.9.0
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
-	gopkg.in/routeros.v2 v2.0.0-20190905230420-1bbf141cdd91
 	gopkg.in/yaml.v3 v3.0.1
 )
 

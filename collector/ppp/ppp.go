@@ -2,15 +2,15 @@ package ppp
 
 import (
 	"fmt"
-	"github.com/ogi4i/mikrotik-exporter/parsers"
-	log "github.com/sirupsen/logrus"
 	"strings"
 
+	"github.com/go-routeros/routeros/v3/proto"
 	"github.com/prometheus/client_golang/prometheus"
-	"gopkg.in/routeros.v2/proto"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/ogi4i/mikrotik-exporter/collector/context"
 	"github.com/ogi4i/mikrotik-exporter/metrics"
+	"github.com/ogi4i/mikrotik-exporter/parsers"
 )
 
 var (

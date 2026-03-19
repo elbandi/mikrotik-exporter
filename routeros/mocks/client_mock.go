@@ -7,8 +7,8 @@ import (
 	mm_atomic "sync/atomic"
 	mm_time "time"
 
+	"github.com/go-routeros/routeros/v3"
 	"github.com/gojuno/minimock/v3"
-	"gopkg.in/routeros.v2"
 )
 
 // ClientMock implements routeros.Client
@@ -21,7 +21,7 @@ type ClientMock struct {
 	beforeAsyncCounter uint64
 	AsyncMock          mClientMockAsync
 
-	funcClose          func()
+	funcClose          func() (err error)
 	inspectFuncClose   func()
 	afterCloseCounter  uint64
 	beforeCloseCounter uint64
@@ -107,7 +107,7 @@ func (mmAsync *mClientMockAsync) Return(ch1 <-chan error) *ClientMock {
 	return mmAsync.mock
 }
 
-//Set uses given function f to mock the Client.Async method
+// Set uses given function f to mock the Client.Async method
 func (mmAsync *mClientMockAsync) Set(f func() (ch1 <-chan error)) *ClientMock {
 	if mmAsync.defaultExpectation != nil {
 		mmAsync.mock.t.Fatalf("Default expectation is already set for the Client.Async method")
@@ -204,7 +204,13 @@ type mClientMockClose struct {
 type ClientMockCloseExpectation struct {
 	mock *ClientMock
 
+	results *ClientMockCloseResults
 	Counter uint64
+}
+
+// ClientMockCloseResults contains results of the Client.Close
+type ClientMockCloseResults struct {
+	err error
 }
 
 // Expect sets up expected params for Client.Close
@@ -232,7 +238,7 @@ func (mmClose *mClientMockClose) Inspect(f func()) *mClientMockClose {
 }
 
 // Return sets up results that will be returned by Client.Close
-func (mmClose *mClientMockClose) Return() *ClientMock {
+func (mmClose *mClientMockClose) Return(err error) *ClientMock {
 	if mmClose.mock.funcClose != nil {
 		mmClose.mock.t.Fatalf("ClientMock.Close mock is already set by Set")
 	}
@@ -240,12 +246,12 @@ func (mmClose *mClientMockClose) Return() *ClientMock {
 	if mmClose.defaultExpectation == nil {
 		mmClose.defaultExpectation = &ClientMockCloseExpectation{mock: mmClose.mock}
 	}
-
+	mmClose.defaultExpectation.results = &ClientMockCloseResults{err}
 	return mmClose.mock
 }
 
-//Set uses given function f to mock the Client.Close method
-func (mmClose *mClientMockClose) Set(f func()) *ClientMock {
+// Set uses given function f to mock the Client.Close method
+func (mmClose *mClientMockClose) Set(f func() (err error)) *ClientMock {
 	if mmClose.defaultExpectation != nil {
 		mmClose.mock.t.Fatalf("Default expectation is already set for the Client.Close method")
 	}
@@ -259,7 +265,7 @@ func (mmClose *mClientMockClose) Set(f func()) *ClientMock {
 }
 
 // Close implements routeros.Client
-func (mmClose *ClientMock) Close() {
+func (mmClose *ClientMock) Close() (err error) {
 	mm_atomic.AddUint64(&mmClose.beforeCloseCounter, 1)
 	defer mm_atomic.AddUint64(&mmClose.afterCloseCounter, 1)
 
@@ -270,15 +276,17 @@ func (mmClose *ClientMock) Close() {
 	if mmClose.CloseMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmClose.CloseMock.defaultExpectation.Counter, 1)
 
-		return
-
+		mm_results := mmClose.CloseMock.defaultExpectation.results
+		if mm_results == nil {
+			mmClose.t.Fatal("No results are set for the ClientMock.Close")
+		}
+		return (*mm_results).err
 	}
 	if mmClose.funcClose != nil {
-		mmClose.funcClose()
-		return
+		return mmClose.funcClose()
 	}
 	mmClose.t.Fatalf("Unexpected call to ClientMock.Close.")
-
+	return
 }
 
 // CloseAfterCounter returns a count of finished ClientMock.Close invocations
@@ -401,7 +409,7 @@ func (mmRun *mClientMockRun) Return(rp1 *routeros.Reply, err error) *ClientMock 
 	return mmRun.mock
 }
 
-//Set uses given function f to mock the Client.Run method
+// Set uses given function f to mock the Client.Run method
 func (mmRun *mClientMockRun) Set(f func(sentence ...string) (rp1 *routeros.Reply, err error)) *ClientMock {
 	if mmRun.defaultExpectation != nil {
 		mmRun.mock.t.Fatalf("Default expectation is already set for the Client.Run method")

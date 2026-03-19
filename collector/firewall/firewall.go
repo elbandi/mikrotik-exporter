@@ -2,10 +2,10 @@ package firewall
 
 import (
 	"fmt"
-	"gopkg.in/routeros.v2/proto"
 	"strconv"
 	"strings"
 
+	"github.com/go-routeros/routeros/v3/proto"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
