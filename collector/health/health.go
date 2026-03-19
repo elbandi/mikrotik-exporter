@@ -92,6 +92,15 @@ func (c *healthCollector) collectMetricForProperty(property string, re *proto.Se
 		return
 	}
 
-	ctx.MetricsChan <- prometheus.MustNewConstMetric(metricDescriptions[property], prometheus.GaugeValue, v,
+	desc, ok := metricDescriptions[property]
+	if !ok {
+		log.WithFields(log.Fields{
+			"collector": c.Name(),
+			"device":    ctx.DeviceName,
+			"property":  property,
+		}).Error("unknown system health metric property")
+		return
+	}
+	ctx.MetricsChan <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, v,
 		ctx.DeviceName, ctx.DeviceAddress)
 }
