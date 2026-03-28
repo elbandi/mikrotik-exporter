@@ -50,6 +50,7 @@ func TestShouldParse(t *testing.T) {
 		r.True(cfg.Features.Health)
 		r.True(cfg.Features.IPPools)
 		r.True(cfg.Features.Routes)
+		r.True(cfg.Features.RoutesIPv6)
 		r.True(cfg.Features.Ethernet)
 		r.True(cfg.Features.PoE)
 		r.True(cfg.Features.SFP)

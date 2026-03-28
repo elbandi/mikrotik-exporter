@@ -24,6 +24,7 @@ features:
   firmware: true
   health: true
   routes: true
+  routes_ipv6: true
   ethernet: true
   poe: true
   ip_pools: true

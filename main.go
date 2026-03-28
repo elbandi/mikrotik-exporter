@@ -213,7 +213,7 @@ func buildCollectors(features *config.Features) []collector.FeatureCollector {
 	}
 
 	if features.Routes {
-		collectors = append(collectors, routes.NewCollector())
+		collectors = append(collectors, routes.NewCollector(features.RoutesIPv6))
 	}
 
 	if features.DHCP {

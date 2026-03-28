@@ -39,6 +39,8 @@ type (
 		Health bool `yaml:"health,omitempty"`
 		// Routes - enables IPv4 routes metrics collection
 		Routes bool `yaml:"routes,omitempty"`
+		// RoutesIPv6 - enables IPv6 routes metrics collection
+		RoutesIPv6 bool `yaml:"routes_ipv6,omitempty"`
 		// PoE - enables PoE metrics collection
 		PoE bool `yaml:"poe,omitempty"`
 		// PPP - enables PPP metrics collection

@@ -21,10 +21,12 @@ var (
 
 const prefix = "routes"
 
-type routesCollector struct{}
+type routesCollector struct {
+	ipv6 bool
+}
 
-func NewCollector() *routesCollector {
-	return &routesCollector{}
+func NewCollector(ipv6 bool) *routesCollector {
+	return &routesCollector{ipv6: ipv6}
 }
 
 func (c *routesCollector) Name() string {
@@ -42,9 +44,11 @@ func (c *routesCollector) Collect(ctx *context.Context) error {
 		return c.collectForIPVersion("ip", "4", ctx)
 	})
 
-	eg.Go(func() error {
-		return c.collectForIPVersion("ipv6", "6", ctx)
-	})
+	if c.ipv6 {
+		eg.Go(func() error {
+			return c.collectForIPVersion("ipv6", "6", ctx)
+		})
+	}
 
 	return eg.Wait()
 }
