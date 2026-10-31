@@ -43,6 +43,7 @@ func TestShouldParse(t *testing.T) {
 		}, cfg.Devices[1])
 
 		r.True(cfg.Features.BGP)
+		r.True(cfg.Features.Container)
 		r.True(cfg.Features.DHCP)
 		r.True(cfg.Features.DHCPIPv6)
 		r.True(cfg.Features.Firewall)

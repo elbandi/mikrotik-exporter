@@ -20,6 +20,7 @@ import (
 	"github.com/ogi4i/mikrotik-exporter/collector/bridge/hosts"
 	"github.com/ogi4i/mikrotik-exporter/collector/capsman"
 	"github.com/ogi4i/mikrotik-exporter/collector/conntrack"
+	"github.com/ogi4i/mikrotik-exporter/collector/container"
 	"github.com/ogi4i/mikrotik-exporter/collector/dhcp"
 	"github.com/ogi4i/mikrotik-exporter/collector/dhcp_ipv6"
 	"github.com/ogi4i/mikrotik-exporter/collector/dns"
@@ -214,6 +215,10 @@ func buildCollectors(features *config.Features) []collector.FeatureCollector {
 
 	if features.Routes {
 		collectors = append(collectors, routes.NewCollector(features.RoutesIPv6))
+	}
+
+	if features.Container {
+		collectors = append(collectors, container.NewCollector())
 	}
 
 	if features.DHCP {

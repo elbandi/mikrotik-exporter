@@ -25,6 +25,8 @@ type (
 		BGP bool `yaml:"bgp,omitempty"`
 		// BridgeFirewall - enables bridge firewall metrics collection
 		BridgeFirewall bool `yaml:"bridge_firewall,omitempty"`
+		// Container - enables container metrics collection
+		Container bool `yaml:"container,omitempty"`
 		// DHCP - enables DHCP server metrics collection
 		DHCP bool `yaml:"dhcp,omitempty"`
 		// DHCPIPv6 - enables DHCP IPv6 server metrics collection
