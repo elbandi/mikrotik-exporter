@@ -18,6 +18,7 @@ devices:
 
 features:
   bgp: true
+  container: true
   dhcp: true
   dhcp_ipv6: true
   firewall: true
