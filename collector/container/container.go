@@ -8,22 +8,20 @@ import (
 	"github.com/go-routeros/routeros/v3/proto"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/ogi4i/mikrotik-exporter/collector/context"
 	"github.com/ogi4i/mikrotik-exporter/metrics"
 )
 
 var (
-	statusProperties   = []string{"downloading/extracting", "\"download/extract failed\"", "starting", "starting-with-healthcheck", "running", "healthy", "unhealthy", "stopping", "stopped", "deleting"}
-	properties         = []string{"name", "cpu-usage", "memory-current"}
-	labelNames         = []string{"name", "address", "container_name"}
-	metricDescriptions = map[string]*metrics.MetricDescription{
-		//"image-id": {
-		//	Desc:      metrics.BuildMetricDescription(prefix, "remote_messages", "number of bgp messages received per session", labelNames),
-		//	ValueType: prometheus.CounterValue,
-		//},
+	statusProperties            = []string{"downloading/extracting", "\"download/extract failed\"", "starting", "starting-with-healthcheck", "running", "healthy", "unhealthy", "stopping", "stopped", "deleting"}
+	containerProperties         = []string{"name", "cpu-usage", "memory-current"}
+	layerProperties             = []string{"containers", "size"}
+	labelNames                  = []string{"name", "address", "container_name"}
+	containerMetricDescriptions = map[string]*metrics.MetricDescription{
 		"status": {
-			Desc:      metrics.BuildMetricDescription(prefix, "status", "number of bgp messages sent per session", labelNames),
+			Desc:      metrics.BuildMetricDescription(prefix, "status", "container status", labelNames),
 			ValueType: prometheus.CounterValue,
 		},
 		"cpu-usage": {
@@ -35,6 +33,7 @@ var (
 			ValueType: prometheus.GaugeValue,
 		},
 	}
+	layersMetricDescription = metrics.BuildMetricDescription(prefix, "layer_size", "container layer size", labelNames)
 )
 
 const prefix = "container"
@@ -50,28 +49,45 @@ func (c *containerCollector) Name() string {
 }
 
 func (c *containerCollector) Describe(ch chan<- *prometheus.Desc) {
-	for _, d := range metricDescriptions {
+	ch <- layersMetricDescription
+	for _, d := range containerMetricDescriptions {
 		ch <- d.Desc
 	}
 }
 
 func (c *containerCollector) Collect(ctx *context.Context) error {
-	stats, err := c.fetch(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to fetch bgp metrics: %w", err)
-	}
+	eg := errgroup.Group{}
+	eg.Go(func() error {
+		stats, err := c.fetchContainers(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to fetch container metrics: %w", err)
+		}
 
-	for _, re := range stats {
-		c.collectForStat(re, ctx)
-	}
+		for _, re := range stats {
+			c.collectForStat(re, ctx)
+		}
 
-	return nil
+		return nil
+	})
+	eg.Go(func() error {
+		stats, err := c.fetchContainerLayers(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to fetch container layer metrics: %w", err)
+		}
+
+		for _, re := range stats {
+			c.collectLayerStats(re, ctx)
+		}
+
+		return nil
+	})
+	return eg.Wait()
 }
 
-func (c *containerCollector) fetch(ctx *context.Context) ([]*proto.Sentence, error) {
+func (c *containerCollector) fetchContainers(ctx *context.Context) ([]*proto.Sentence, error) {
 	reply, err := ctx.RouterOSClient.Run(
 		"/container/print",
-		"=.proplist="+strings.Join(append(append([]string{}, properties...), statusProperties...), ","),
+		"=.proplist="+strings.Join(append(append([]string{}, containerProperties...), statusProperties...), ","),
 	)
 	if err != nil {
 		return nil, err
@@ -80,8 +96,44 @@ func (c *containerCollector) fetch(ctx *context.Context) ([]*proto.Sentence, err
 	return reply.Re, nil
 }
 
+func (c *containerCollector) fetchContainerLayers(ctx *context.Context) ([]*proto.Sentence, error) {
+	reply, err := ctx.RouterOSClient.Run(
+		"/container/layers/print",
+		"=.proplist="+strings.Join(layerProperties, ","),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return reply.Re, nil
+}
+
+func (c *containerCollector) collectLayerStats(re *proto.Sentence, ctx *context.Context) {
+	value := re.Map["size"]
+	if len(value) == 0 {
+		return
+	}
+	name := re.Map["containers"]
+
+	v, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"collector": c.Name(),
+			"device":    ctx.DeviceName,
+			"name":      name,
+			"property":  "size",
+			"value":     value,
+			"error":     err,
+		}).Error("failed to parse container layer metric value")
+		return
+	}
+	ctx.MetricsChan <- prometheus.MustNewConstMetric(layersMetricDescription, prometheus.GaugeValue, v,
+		ctx.DeviceName, ctx.DeviceAddress, name,
+	)
+}
+
 func (c *containerCollector) collectForStat(re *proto.Sentence, ctx *context.Context) {
-	for p := range metricDescriptions {
+	for p := range containerMetricDescriptions {
 		switch p {
 		case "status":
 			c.collectMetricForHealthy(p, re, ctx)
@@ -127,7 +179,7 @@ func (c *containerCollector) collectMetricForProperty(property string, re *proto
 		return
 	}
 
-	desc := metricDescriptions[property]
+	desc := containerMetricDescriptions[property]
 	ctx.MetricsChan <- prometheus.MustNewConstMetric(desc.Desc, desc.ValueType, v, ctx.DeviceName, ctx.DeviceAddress, name)
 }
 
@@ -150,6 +202,6 @@ func (c *containerCollector) collectMetricForHealthy(property string, re *proto.
 		return
 	}
 
-	desc := metricDescriptions[property]
+	desc := containerMetricDescriptions[property]
 	ctx.MetricsChan <- prometheus.MustNewConstMetric(desc.Desc, desc.ValueType, float64(value), ctx.DeviceName, ctx.DeviceAddress, name)
 }
