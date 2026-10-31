@@ -42,9 +42,10 @@ func Test_containerCollector_Describe(t *testing.T) {
 
 	<-done
 	r.ElementsMatch([]*prometheus.Desc{
-		metrics.BuildMetricDescription(prefix, "package_active", "active container packages",
-			[]string{"name", "package", "version", "build_time"},
-		),
+		metrics.BuildMetricDescription(prefix, "status", "container status", labelNames),
+		metrics.BuildMetricDescription(prefix, "cpu_usage", "CPU usage percentage", labelNames),
+		metrics.BuildMetricDescription(prefix, "memory_current", "current memory usage", labelNames),
+		metrics.BuildMetricDescription(prefix, "layer_size", "container layer size", labelNames),
 	}, got)
 }
 
@@ -67,38 +68,135 @@ func Test_containerCollector_Collect(t *testing.T) {
 		{
 			name: "success",
 			setMocks: func() {
-				routerOSClientMock.RunMock.
-					When([]string{"/system/package/getall"}...).
-					Then(&routeros.Reply{
-						Re: []*proto.Sentence{
-							{
-								Map: map[string]string{
-									"name":       "name",
-									"version":    "version",
-									"build-time": "build-time",
-									"disabled":   "false",
-								},
+				routerOSClientMock.RunMock.When([]string{
+					"/container/print",
+					"=.proplist=name,cpu-usage,memory-current,downloading/extracting,\"download/extract failed\",starting,starting-with-healthcheck,running,healthy,unhealthy,stopping,stopped,deleting",
+				}...).Then(&routeros.Reply{
+					Re: []*proto.Sentence{
+						{
+							Map: map[string]string{
+								"name":           "pihole",
+								"cpu-usage":      "0",
+								"memory-current": "123456",
+								"running":        "true",
 							},
 						},
-					}, nil)
+					},
+				}, nil)
+
+				routerOSClientMock.RunMock.When([]string{
+					"/container/layers/print",
+					"=.proplist=containers,size",
+				}...).Then(&routeros.Reply{
+					Re: []*proto.Sentence{
+						{
+							Map: map[string]string{
+								"containers": "pihole",
+								"size":       "654321",
+							},
+						},
+					},
+				}, nil)
 			},
 			want: []prometheus.Metric{
 				prometheus.MustNewConstMetric(
-					metrics.BuildMetricDescription(prefix, "package_active", "active container packages",
-						[]string{"name", "package", "version", "build_time"},
-					),
-					prometheus.GaugeValue, 1, "device", "name", "version", "build-time",
+					metrics.BuildMetricDescription(prefix, "status", "container status", labelNames),
+					prometheus.CounterValue, 4, "device", "address", "pihole",
+				),
+				prometheus.MustNewConstMetric(
+					metrics.BuildMetricDescription(prefix, "cpu_usage", "CPU usage percentage", labelNames),
+					prometheus.GaugeValue, 0, "device", "address", "pihole",
+				),
+				prometheus.MustNewConstMetric(
+					metrics.BuildMetricDescription(prefix, "memory_current", "current memory usage", labelNames),
+					prometheus.GaugeValue, 123456, "device", "address", "pihole",
+				),
+				prometheus.MustNewConstMetric(
+					metrics.BuildMetricDescription(prefix, "layer_size", "container layer size", labelNames),
+					prometheus.GaugeValue, 654321, "device", "address", "pihole",
 				),
 			},
 		},
 		{
-			name: "fetch error",
+			name: "container fetch error",
 			setMocks: func() {
-				routerOSClientMock.RunMock.Inspect(func(sentence ...string) {
-					r.Equal([]string{"/system/package/getall"}, sentence)
-				}).Return(nil, errors.New("some fetch error"))
+				routerOSClientMock.RunMock.When([]string{
+					"/container/print",
+					"=.proplist=name,cpu-usage,memory-current,downloading/extracting,\"download/extract failed\",starting,starting-with-healthcheck,running,healthy,unhealthy,stopping,stopped,deleting",
+				}...).Then(nil, errors.New("some fetch error"))
+
+				routerOSClientMock.RunMock.When([]string{
+					"/container/layers/print",
+					"=.proplist=containers,size",
+				}...).Then(&routeros.Reply{
+					Re: []*proto.Sentence{},
+				}, nil)
 			},
-			errWant: "failed to fetch package: some fetch error",
+			errWant: "failed to fetch container metrics: some fetch error",
+		},
+		{
+			name: "container layers fetch error",
+			setMocks: func() {
+				routerOSClientMock.RunMock.When([]string{
+					"/container/print",
+					"=.proplist=name,cpu-usage,memory-current,downloading/extracting,\"download/extract failed\",starting,starting-with-healthcheck,running,healthy,unhealthy,stopping,stopped,deleting",
+				}...).Then(&routeros.Reply{
+					Re: []*proto.Sentence{},
+				}, nil)
+
+				routerOSClientMock.RunMock.When([]string{
+					"/container/layers/print",
+					"=.proplist=containers,size",
+				}...).Then(nil, errors.New("some fetch error"))
+			},
+			errWant: "failed to fetch container layer metrics: some fetch error",
+		},
+		{
+			name: "invalid container status",
+			setMocks: func() {
+				routerOSClientMock.RunMock.When([]string{
+					"/container/print",
+					"=.proplist=name,cpu-usage,memory-current,downloading/extracting,\"download/extract failed\",starting,starting-with-healthcheck,running,healthy,unhealthy,stopping,stopped,deleting",
+				}...).Then(&routeros.Reply{
+					Re: []*proto.Sentence{
+						{
+							Map: map[string]string{
+								"name":           "pihole",
+								"cpu-usage":      "0",
+								"memory-current": "123456",
+							},
+						},
+					},
+				}, nil)
+
+				routerOSClientMock.RunMock.When([]string{
+					"/container/layers/print",
+					"=.proplist=containers,size",
+				}...).Then(&routeros.Reply{
+					Re: []*proto.Sentence{
+						{
+							Map: map[string]string{
+								"containers": "pihole",
+								"size":       "654321",
+							},
+						},
+					},
+				}, nil)
+			},
+			want: []prometheus.Metric{
+				prometheus.MustNewConstMetric(
+					metrics.BuildMetricDescription(prefix, "cpu_usage", "CPU usage percentage", labelNames),
+					prometheus.GaugeValue, 0, "device", "address", "pihole",
+				),
+				prometheus.MustNewConstMetric(
+					metrics.BuildMetricDescription(prefix, "memory_current", "current memory usage", labelNames),
+					prometheus.GaugeValue, 123456, "device", "address", "pihole",
+				),
+				prometheus.MustNewConstMetric(
+					metrics.BuildMetricDescription(prefix, "layer_size", "container layer size", labelNames),
+					prometheus.GaugeValue, 654321, "device", "address", "pihole",
+				),
+			},
 		},
 	}
 
