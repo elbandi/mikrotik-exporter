@@ -143,13 +143,13 @@ func (c *containerCollector) collectForStat(re *proto.Sentence, ctx *context.Con
 	}
 }
 
-func (c *containerCollector) getStatusValue(re *proto.Sentence) (int, error) {
+func (c *containerCollector) getStatusValue(re *proto.Sentence) (uint, error) {
 	for i, s := range statusProperties {
 		if "true" == re.Map[s] {
-			return i, nil
+			return uint(i + 1), nil
 		}
 	}
-	return -1, fmt.Errorf("status not found")
+	return 0, fmt.Errorf("status not found")
 }
 
 func (c *containerCollector) collectMetricForProperty(property string, re *proto.Sentence, ctx *context.Context) {

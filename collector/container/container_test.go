@@ -101,7 +101,7 @@ func Test_containerCollector_Collect(t *testing.T) {
 			want: []prometheus.Metric{
 				prometheus.MustNewConstMetric(
 					metrics.BuildMetricDescription(prefix, "status", "container status", labelNames),
-					prometheus.CounterValue, 4, "device", "address", "pihole",
+					prometheus.CounterValue, 5, "device", "address", "pihole",
 				),
 				prometheus.MustNewConstMetric(
 					metrics.BuildMetricDescription(prefix, "cpu_usage", "CPU usage percentage", labelNames),
